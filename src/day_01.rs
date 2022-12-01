@@ -1,19 +1,27 @@
 // https://adventofcode.com/2022/day/1
 
 use miette::{miette, IntoDiagnostic, Result};
-use reqwest::Response;
-use std::{fmt::Debug, ops::Add, str::FromStr};
+use reqwest::{Client, Response};
+use std::{env, fmt::Debug, ops::Add, str::FromStr};
 
 pub(crate) async fn download_href(href: &str) -> Result<Response> {
-    reqwest::get(href).await.into_diagnostic()
+    let cookie = env::var("COOKIE").into_diagnostic()?;
+
+    Client::new()
+        .get(href)
+        .header("COOKIE", cookie)
+        .send()
+        .await
+        .into_diagnostic()
 }
 
 pub(crate) async fn response_as_text(response: Response) -> Result<String> {
     response.text().await.into_diagnostic()
 }
 
-pub(crate) fn parse_line_groups<T: FromStr>(text: &str) -> Result<Vec<Vec<T>>>
+pub(crate) fn parse_line_groups<T>(text: &str) -> Result<Vec<Vec<T>>>
 where
+    T: FromStr,
     T::Err: Debug,
 {
     let mut all_groups = vec![];
@@ -34,7 +42,10 @@ where
     Ok(all_groups)
 }
 
-pub(crate) fn sum_groups<T: Add<Output = T> + Copy>(groups: Vec<Vec<T>>) -> Vec<Option<T>> {
+pub(crate) fn sum_groups<T>(groups: Vec<Vec<T>>) -> Vec<Option<T>>
+where
+    T: Add<Output = T> + Copy,
+{
     groups
         .into_iter()
         .map(|group| {
@@ -45,43 +56,40 @@ pub(crate) fn sum_groups<T: Add<Output = T> + Copy>(groups: Vec<Vec<T>>) -> Vec<
         .collect()
 }
 
-pub(crate) fn index_of_largest_group<T: PartialOrd + Copy>(
-    groups: Vec<Option<T>>,
-) -> Option<usize> {
-    let mut index = 0;
-    let mut largest: Option<T> = None;
+pub(crate) fn sort_grouped_values<T>(text: &str) -> Result<Vec<(usize, Option<T>)>>
+where
+    T: Add<Output = T> + Copy + FromStr + Ord,
+    <T as FromStr>::Err: Debug,
+{
+    let mut groups = parse_line_groups::<T>(text)
+        .map(sum_groups)?
+        .into_iter()
+        .enumerate()
+        .collect::<Vec<_>>();
 
-    for (i, group) in groups.into_iter().enumerate() {
-        if let Some(group) = group {
-            largest = Some(largest.map_or_else(
-                || group,
-                |largest| {
-                    if group < largest {
-                        largest
-                    } else {
-                        index = i;
-                        group
-                    }
-                },
-            ))
-        }
-    }
+    groups.sort_by(|(_, a), (_, b)| b.cmp(a));
 
-    match largest {
-        Some(_) => Some(index),
-        None => None,
-    }
+    Ok(groups)
 }
 
-pub(crate) async fn part_1() -> Result<String> {
-    let elf_index = download_href("https://adventofcode.com/2022/day/1/input")
+pub(crate) async fn part_1_and_2() -> Result<String> {
+    let data = download_href("https://adventofcode.com/2022/day/1/input")
         .await
         .map(response_as_text)?
         .await
-        .map(|text| parse_line_groups::<u16>(&text))?
-        .map(sum_groups)
-        .map(index_of_largest_group)?
-        .unwrap_or(0);
+        .map(|v| sort_grouped_values(&v))??;
 
-    Ok(format!("Most caloric elf: {}", elf_index + 1))
+    let top_elf = data[0].1.unwrap_or(0);
+
+    let top_three_elves = data[0..3]
+        .iter()
+        .fold(0, |acc, (_, v)| acc + v.unwrap_or(0));
+
+    Ok(format!(
+        r#"
+Part 1: Top elf's calories: {}
+Part 2: Top three elve's calories: {}
+"#,
+        top_elf, top_three_elves
+    ))
 }
