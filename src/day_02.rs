@@ -11,6 +11,15 @@ pub(crate) fn get_player_game(elf: &char, our: &char) -> Ordering {
     }
 }
 
+pub(crate) fn get_player_play(outcome: &char, elf: &char) -> char {
+    match (outcome, elf) {
+        ('X', 'A') | ('Y', 'C') | ('Z', 'B') => 'Z',
+        ('X', 'B') | ('Y', 'A') | ('Z', 'C') => 'X',
+        ('X', 'C') | ('Y', 'B') | ('Z', 'A') => 'Y',
+        _ => unreachable!("invalid plays: {} vs {}", outcome, elf),
+    }
+}
+
 pub(crate) fn get_game_points(elf: &char, our: &char) -> u32 {
     match get_player_game(elf, our) {
         Ordering::Less => 0,
@@ -44,29 +53,36 @@ pub(crate) fn parse_file(file: &str) -> Vec<(char, char)> {
         .collect::<Vec<_>>()
 }
 
-pub(crate) fn collect_scores(games: Vec<(char, char)>) -> Vec<u32> {
+pub(crate) fn collect_scores(games: &Vec<(char, char)>) -> Vec<u32> {
     games
         .iter()
         .map(|(elf, our)| score_game(elf, our))
         .collect()
 }
 
-pub(crate) fn part_1() -> String {
-    let scores = env::args()
+pub(crate) fn part_1_and_2() -> String {
+    let games = env::args()
         .nth(1)
         .map(fs::read_to_string)
         .expect("failed to read input file")
         .as_deref()
         .map(parse_file)
-        .map(collect_scores)
         .expect("failed to parse scores");
 
-    let player_total_score: u32 = scores.iter().sum();
+    let part_1_scores: u32 = collect_scores(&games).iter().sum();
+
+    let games = games
+        .into_iter()
+        .map(|(elf, outcome)| (elf, get_player_play(&outcome, &elf)))
+        .collect::<Vec<_>>();
+
+    let part_2_scores: u32 = collect_scores(&games).iter().sum();
 
     format!(
         r#"
 Part 1: Total game score: {}
+Part 2: Total game score: {}
 "#,
-        player_total_score,
+        part_1_scores, part_2_scores,
     )
 }
