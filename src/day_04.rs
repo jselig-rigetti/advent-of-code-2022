@@ -1,6 +1,6 @@
 // https://adventofcode.com/2022/day/2
 
-use std::{collections::HashSet, env, fs, num::ParseIntError, str::FromStr};
+use std::{env, fs, num::ParseIntError, str::FromStr};
 
 pub(crate) struct Assignment {
     lo: u32,
@@ -24,6 +24,10 @@ impl FromStr for Assignment {
 impl Assignment {
     fn includes(&self, other: &Self) -> bool {
         self.lo <= other.lo && self.hi >= other.hi
+    }
+
+    fn overlaps(&self, other: &Self) -> bool {
+        self.lo <= other.hi && self.hi >= other.lo
     }
 }
 
@@ -50,8 +54,21 @@ pub(crate) fn score_group(assignment: (Assignment, Assignment)) -> u32 {
     }
 }
 
+pub(crate) fn score_group_part_2(assignment: (Assignment, Assignment)) -> u32 {
+    let (l, r) = assignment;
+    if l.overlaps(&r) {
+        1
+    } else {
+        0
+    }
+}
+
 pub(crate) fn score_all_groups(assignments: Vec<(Assignment, Assignment)>) -> Vec<u32> {
     assignments.into_iter().map(score_group).collect()
+}
+
+pub(crate) fn score_all_groups_part_2(assignments: Vec<(Assignment, Assignment)>) -> Vec<u32> {
+    assignments.into_iter().map(score_group_part_2).collect()
 }
 
 pub(crate) fn solve() -> String {
@@ -68,10 +85,19 @@ pub(crate) fn solve() -> String {
         .into_iter()
         .sum();
 
+    let data_part_2 = input.as_deref().map(parse_file);
+
+    let part_2_score: u32 = data_part_2
+        .map(score_all_groups_part_2)
+        .expect("failed to parse scores")
+        .into_iter()
+        .sum();
+
     format!(
         r#"
 Part 1: Total game score: {}
+Part 2: Total game score: {}
 "#,
-        part_1_score,
+        part_1_score, part_2_score,
     )
 }
