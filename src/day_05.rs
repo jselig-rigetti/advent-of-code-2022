@@ -51,6 +51,16 @@ impl CrateStacks {
         let c = self.take(source);
         self.prepend(target, c);
     }
+
+    fn swap_n(&mut self, source: usize, target: usize, count: usize) {
+        let taken = self
+            .data
+            .get_mut(source)
+            .unwrap()
+            .splice(0..count, vec![])
+            .collect::<Vec<_>>();
+        self.data.get_mut(target).unwrap().splice(0..0, taken);
+    }
 }
 
 impl Display for CrateStacks {
@@ -121,6 +131,22 @@ pub(crate) fn apply_instructions(
     crate_stacks
 }
 
+pub(crate) fn apply_instructions_part_2(
+    mut crate_stacks: CrateStacks,
+    instructions: &Vec<Instruction>,
+) -> CrateStacks {
+    for &Instruction {
+        source,
+        target,
+        count,
+    } in instructions
+    {
+        crate_stacks.swap_n(source - 1, target - 1, count);
+    }
+
+    crate_stacks
+}
+
 pub(crate) fn solve() -> String {
     let input = env::args()
         .nth(1)
@@ -132,9 +158,22 @@ pub(crate) fn solve() -> String {
         .map(parse_file)
         .expect("failed to parse data");
 
-    let finished_stacks = apply_instructions(crate_stacks, &instructions);
+    let finished_stacks_part_1 = apply_instructions(crate_stacks, &instructions);
 
-    let top_crates = finished_stacks
+    let (crate_stacks, instructions) = input
+        .as_deref()
+        .map(parse_file)
+        .expect("failed to parse data");
+
+    let finished_stacks_part_2 = apply_instructions_part_2(crate_stacks, &instructions);
+
+    let top_crates_part_1 = finished_stacks_part_1
+        .data
+        .into_iter()
+        .map(|stack| stack.get(0).unwrap_or(&' ').clone())
+        .collect::<String>();
+
+    let top_crates_part_2 = finished_stacks_part_2
         .data
         .into_iter()
         .map(|stack| stack.get(0).unwrap_or(&' ').clone())
@@ -143,7 +182,8 @@ pub(crate) fn solve() -> String {
     format!(
         r#"
 Part 1: top crates: {}
+Part 2: top crates: {}
 "#,
-        top_crates,
+        top_crates_part_1, top_crates_part_2,
     )
 }
