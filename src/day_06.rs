@@ -17,14 +17,20 @@ fn get_part_1_answer(input: &str) -> usize {
     get_start_packet_index(input, 4) + 1
 }
 
+fn get_part_2_answer(input: &str) -> usize {
+    get_start_packet_index(input, 14) + 1
+}
+
 pub(crate) fn solve(input: String) -> String {
     let part_1_answer = get_part_1_answer(&input);
+    let part_2_answer = get_part_2_answer(&input);
 
     format!(
         r#"
 Part 1: packet start index: {}
+Part 2: packet start index: {}
 "#,
-        part_1_answer,
+        part_1_answer, part_2_answer,
     )
 }
 
