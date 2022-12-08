@@ -144,11 +144,8 @@ fn get_sizes(name: String, dir: &Dir) -> Vec<(String, u32)> {
     subdir_sizes
 }
 
-fn get_dirs_sum_lte_threshold(input: &str, threshold: u32) -> u32 {
-    let history = parse_history(input);
-    let dir = parse_cmds(history);
-
-    let lte_threshold = get_sizes("/".to_string(), &dir)
+fn get_dirs_sum_lte_threshold(dir: &Dir, threshold: u32) -> u32 {
+    let lte_threshold = get_sizes("/".to_string(), dir)
         .into_iter()
         .filter_map(
             |(_, size)| {
@@ -163,19 +160,45 @@ fn get_dirs_sum_lte_threshold(input: &str, threshold: u32) -> u32 {
     lte_threshold.sum()
 }
 
-fn get_part_1_answer(input: &str) -> u32 {
-    get_dirs_sum_lte_threshold(input, 100_000)
+fn parse_fs(input: &str) -> Dir {
+    parse_cmds(parse_history(input))
+}
+
+fn get_part_1_answer(dir: &Dir) -> u32 {
+    get_dirs_sum_lte_threshold(dir, 100_000)
+}
+
+fn get_part_2_answer(dir: &Dir) -> u32 {
+    let total_fs_size: u32 = 70_000_000;
+    let needs_fs_size: u32 = 30_000_000;
+
+    let curr_fs_free = total_fs_size - dir.get_size();
+    let clean_fs_size = needs_fs_size - curr_fs_free;
+
+    get_sizes("/".to_string(), dir)
+        .into_iter()
+        .filter_map(|(_, size)| {
+            if size >= clean_fs_size {
+                Some(size)
+            } else {
+                None
+            }
+        })
+        .min()
+        .expect("expected min freeable dir")
 }
 
 pub(crate) fn solve(input: String) -> String {
-    let part_1_answer = get_part_1_answer(&input);
+    let dir = parse_fs(&input);
+    let part_1_answer = get_part_1_answer(&dir);
+    let part_2_answer = get_part_2_answer(&dir);
 
     format!(
         r#"
 Part 1: sum dirs under 100_000 threshold: {}
-Part 2: {}
+Part 2: smallest deletable dir to free size: {}
 "#,
-        part_1_answer, "todo",
+        part_1_answer, part_2_answer,
     )
 }
 
@@ -208,8 +231,13 @@ mod test {
     5626152 d.ext
     7214296 k";
 
-    #[rstest(input, expected, case(INPUT, 95437))]
+    #[rstest(input, expected, case(INPUT, 95_437))]
     fn test_part_1(input: &str, expected: u32) {
-        assert_eq!(get_part_1_answer(input), expected);
+        assert_eq!(get_part_1_answer(&parse_fs(input)), expected);
+    }
+
+    #[rstest(input, expected, case(INPUT, 24_933_642))]
+    fn test_part_2(input: &str, expected: u32) {
+        assert_eq!(get_part_2_answer(&parse_fs(input)), expected);
     }
 }
