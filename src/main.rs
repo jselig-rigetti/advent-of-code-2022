@@ -11,6 +11,7 @@ mod day_04;
 mod day_05;
 mod day_06;
 mod day_07;
+mod day_08;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -22,7 +23,8 @@ async fn main() -> Result<()> {
     // println!("{}", day_04::solve());
     // println!("{}", day_05::solve());
     // println!("{}", day_06::solve(input));
-    println!("{}", day_07::solve(input));
+    // println!("{}", day_07::solve(input));
+    println!("{}", day_08::solve(input));
 
     Ok(())
 }
