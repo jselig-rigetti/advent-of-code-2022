@@ -57,26 +57,10 @@ fn parse_moves(input: &str) -> Vec<Move> {
         .collect()
 }
 
-fn solve_part_1(moves: &Vec<Move>) -> usize {
+fn solve_n_tails(moves: &Vec<Move>, size: usize) -> usize {
     let mut visited = HashSet::new();
     let mut head = Position::default();
-    let mut tail = Position::default();
-
-    for (direction, count) in moves {
-        for _ in 0..*count {
-            head.move_direction(direction);
-            tail.follow(&head);
-            visited.insert(tail.to_string());
-        }
-    }
-
-    visited.len()
-}
-
-fn solve_part_2(moves: &Vec<Move>) -> usize {
-    let mut visited = HashSet::new();
-    let mut head = Position::default();
-    let mut tails: Vec<_> = (0..9).map(|_| Position::default()).collect();
+    let mut tails: Vec<_> = (0..size).map(|_| Position::default()).collect();
 
     for (direction, count) in moves {
         for _ in 0..*count {
@@ -90,6 +74,14 @@ fn solve_part_2(moves: &Vec<Move>) -> usize {
     }
 
     visited.len()
+}
+
+fn solve_part_1(moves: &Vec<Move>) -> usize {
+    solve_n_tails(moves, 1)
+}
+
+fn solve_part_2(moves: &Vec<Move>) -> usize {
+    solve_n_tails(moves, 9)
 }
 
 pub(crate) fn solve(input: String) -> String {
