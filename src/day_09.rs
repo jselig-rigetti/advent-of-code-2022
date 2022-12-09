@@ -63,10 +63,28 @@ fn solve_part_1(moves: &Vec<Move>) -> usize {
     let mut tail = Position::default();
 
     for (direction, count) in moves {
-        visited.insert(tail.to_string());
         for _ in 0..*count {
             head.move_direction(direction);
             tail.follow(&head);
+            visited.insert(tail.to_string());
+        }
+    }
+
+    visited.len()
+}
+
+fn solve_part_2(moves: &Vec<Move>) -> usize {
+    let mut visited = HashSet::new();
+    let mut head = Position::default();
+    let mut tails: Vec<_> = (0..9).map(|_| Position::default()).collect();
+
+    for (direction, count) in moves {
+        for _ in 0..*count {
+            head.move_direction(direction);
+            let tail = tails.iter_mut().fold(&mut head, |lead, curr| {
+                curr.follow(lead);
+                curr
+            });
             visited.insert(tail.to_string());
         }
     }
@@ -78,7 +96,7 @@ pub(crate) fn solve(input: String) -> String {
     let moves = parse_moves(&input);
 
     let part_1_answer = solve_part_1(&moves);
-    let part_2_answer = "todo";
+    let part_2_answer = solve_part_2(&moves);
 
     format!(
         r#"
@@ -108,5 +126,21 @@ mod test {
     fn test_part_1(input: &str, expected: usize) {
         let moves = parse_moves(input);
         assert_eq!(solve_part_1(&moves), expected);
+    }
+
+    static INPUT_2: &str = "
+    R 5
+    U 8
+    L 8
+    D 3
+    R 17
+    D 10
+    L 25
+    U 20";
+
+    #[rstest(input, expected, case(INPUT_2, 36))]
+    fn test_part_2(input: &str, expected: usize) {
+        let moves = parse_moves(input);
+        assert_eq!(solve_part_2(&moves), expected);
     }
 }
