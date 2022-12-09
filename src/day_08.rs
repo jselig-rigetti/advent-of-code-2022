@@ -181,11 +181,76 @@ fn get_part_1_answer(visibility_grid: &VisibilityGrid) -> usize {
     visibility_grid.count_all_visible()
 }
 
+fn get_part_2_answer(tree_grid: &TreeGrid) -> usize {
+    let num_rows = tree_grid.num_rows();
+    let num_cols = tree_grid.num_cols();
+
+    let mut max_score: usize = 0;
+
+    for row in 0..num_rows {
+        for col in 0..num_cols {
+            let tree = tree_grid.get(row, col);
+
+            let mut top_score = 0;
+            let mut right_score = 0;
+            let mut bottom_score = 0;
+            let mut left_score = 0;
+
+            // top
+            let mut offset: usize = 1;
+            while let Some(row) = row.checked_sub(offset) {
+                top_score += 1;
+                if tree_grid.get(row, col) >= tree {
+                    break;
+                }
+                offset += 1;
+            }
+
+            // right
+            let mut offset: usize = 1;
+            while col + offset < num_cols {
+                right_score += 1;
+                if tree_grid.get(row, col + offset) >= tree {
+                    break;
+                }
+                offset += 1;
+            }
+
+            // bottom
+            let mut offset: usize = 1;
+            while row + offset < num_cols {
+                bottom_score += 1;
+                if tree_grid.get(row + offset, col) >= tree {
+                    break;
+                }
+                offset += 1;
+            }
+
+            // left
+            let mut offset: usize = 1;
+            while let Some(col) = col.checked_sub(offset) {
+                left_score += 1;
+                if tree_grid.get(row, col) >= tree {
+                    break;
+                }
+                offset += 1;
+            }
+
+            let curr_score = top_score * right_score * bottom_score * left_score;
+            if curr_score > max_score {
+                max_score = curr_score;
+            }
+        }
+    }
+
+    max_score
+}
+
 pub(crate) fn solve(input: String) -> String {
     let (tree_grid, visibility_grid) = parse_input(&input);
 
     let part_1_answer = get_part_1_answer(&visibility_grid);
-    let part_2_answer = "todo";
+    let part_2_answer = get_part_2_answer(&tree_grid);
 
     format!(
         r#"
@@ -212,5 +277,11 @@ mod test {
     fn test_part_1(input: &str, expected: usize) {
         let (_, visibility_grid) = parse_input(input);
         assert_eq!(get_part_1_answer(&visibility_grid), expected);
+    }
+
+    #[rstest(input, expected, case(INPUT, 8))]
+    fn test_part_2(input: &str, expected: usize) {
+        let (tree_grid, _) = parse_input(input);
+        assert_eq!(get_part_2_answer(&tree_grid), expected);
     }
 }
