@@ -11,7 +11,8 @@ use miette::Result;
 // mod day_05;
 // mod day_06;
 // mod day_07;
-mod day_08;
+// mod day_08;
+mod day_09;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,7 +25,8 @@ async fn main() -> Result<()> {
     // println!("{}", day_05::solve());
     // println!("{}", day_06::solve(input));
     // println!("{}", day_07::solve(input));
-    println!("{}", day_08::solve(input));
+    // println!("{}", day_08::solve(input));
+    println!("{}", day_09::solve(input));
 
     Ok(())
 }
