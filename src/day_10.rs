@@ -80,11 +80,33 @@ fn solve_part_1(instructions: &Vec<Instruction>) -> i32 {
     total
 }
 
+fn solve_part_2(instructions: &Vec<Instruction>) -> String {
+    let mut screen = String::new();
+
+    execute_with_midcycle_sampler(instructions, |cycle, value| {
+        let x = (cycle - 1) % 40;
+
+        if x == 0 {
+            screen.push('\n');
+        }
+
+        let pixel = if (x as i32 - value).abs() <= 1 {
+            '#'
+        } else {
+            ' ' // easier to read than '.'
+        };
+
+        screen.push(pixel);
+    });
+
+    screen
+}
+
 pub(crate) fn solve(input: String) -> String {
     let instructions = parse_input(&input);
 
     let part_1_answer = solve_part_1(&instructions);
-    let part_2_answer = "todo";
+    let part_2_answer = solve_part_2(&instructions);
 
     format!(
         r#"
